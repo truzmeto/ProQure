@@ -6,8 +6,12 @@ import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
+
 pdb_ids = ["GLU-THR-LEU"]
 path = "../"
+#pdb_ids = ["AAA_nowat.pdb"]
+#path  = "/u1/home/tr443/Projects/ProteinQure/data/Initial/"
+
 box_size = 20  
 resolution = 1.0
 
@@ -36,7 +40,7 @@ Agroup_names = ["Sulfur/Selenium"  , "Nitrogen Amide",
 
 pl = pv.Plotter(point_smoothing = True, shape=(2, 5))
 fs = 12
-i_group = 1
+i_group = 0
 ipdb = 0
 
 for i in range(2):
