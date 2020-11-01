@@ -1,0 +1,9 @@
+/data
+/output
+*.zip
+.ipynb_checkpoints/
+__pycache__/
+*~
+*outs
+*errs
+*.mp4
