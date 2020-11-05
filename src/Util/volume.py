@@ -30,6 +30,9 @@ def get_volume(path_list, box_size, resolution,
     #with torch.no_grad():
     batch_size = len(path_list)
     coords, _, resnames, _, atomnames, num_atoms = pdb2coords(path_list)
+
+    #print(resnames, atomnames, num_atoms)
+    #print(coords.shape)
     
     a,b = getBBox(coords, num_atoms)
     protein_center = (a+b)*0.5
@@ -54,6 +57,8 @@ def get_volume(path_list, box_size, resolution,
 
     coords, num_atoms_of_type = assignTypes(coords.to(dtype=torch.float32), resnames, atomnames, num_atoms)
     volume = project(coords.cuda(), num_atoms_of_type.cuda())
+
+    print('num_atoms_of_type', num_atoms_of_type)
     
     if norm: #apply min-max norm 
         volume = (volume - torch.min(volume)) / (torch.max(volume) - torch.min(volume))

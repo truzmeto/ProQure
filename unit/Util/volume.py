@@ -7,10 +7,10 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
 
-pdb_ids = ["GLU-THR-LEU"]
+pdb_ids = ["AAA"]
 path = "../"
-#pdb_ids = ["AAA_nowat.pdb"]
-#path  = "/u1/home/tr443/Projects/ProteinQure/data/Initial/"
+#tp_name = "ACA"
+#path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
 
 box_size = 20  
 resolution = 1.0
@@ -38,20 +38,21 @@ Agroup_names = ["Sulfur/Selenium"  , "Nitrogen Amide",
 
 
 
-pl = pv.Plotter(point_smoothing = True, shape=(2, 5))
-fs = 12
+pl = pv.Plotter(point_smoothing = True, shape=(2, 6))
+fs = 11
 i_group = 0
 ipdb = 0
 
 for i in range(2):
-    for j in range(5):
+    for j in range(6):
 
-        ch = volume[0,i_group,:,:,:].cpu().numpy()
-        text = Agroup_names[i_group] + " " + pdb_ids[ipdb]
-
-        pl.subplot(i, j)
-        pl.add_text(text, position = 'upper_left', font_size = fs)
-        pl.add_volume(ch, cmap = "viridis_r", opacity = "linear")
+        if i_group < 11:
+            ch = volume[0,i_group,:,:,:].cpu().numpy()
+            text = pdb_ids[ipdb] + ": " + Agroup_names[i_group]  
+            
+            pl.subplot(i, j)
+            pl.add_text(text, position = 'upper_left', font_size = fs)
+            pl.add_volume(ch, cmap = "viridis_r", opacity = "linear")
 
         i_group = i_group + 1
 
