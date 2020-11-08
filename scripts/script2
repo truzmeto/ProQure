@@ -1,0 +1,2 @@
+#separate trajectory into frames
+for i in {1..1699}; do head -$[43 * i] AAA_nowat.movie | tail -42 > AAA$i.pdb ; done

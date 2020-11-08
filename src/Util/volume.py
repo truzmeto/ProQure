@@ -58,7 +58,7 @@ def get_volume(path_list, box_size, resolution,
     coords, num_atoms_of_type = assignTypes(coords.to(dtype=torch.float32), resnames, atomnames, num_atoms)
     volume = project(coords.cuda(), num_atoms_of_type.cuda())
 
-    print('num_atoms_of_type', num_atoms_of_type)
+    #print('num_atoms_of_type', num_atoms_of_type)
     
     if norm: #apply min-max norm 
         volume = (volume - torch.min(volume)) / (torch.max(volume) - torch.min(volume))

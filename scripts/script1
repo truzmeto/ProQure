@@ -1,0 +1,5 @@
+#for each .dcd file, take 1st 3 characters and make dir under that name
+for i in `ls *.dcd`; do mkdir -p "${i:0:3}";done
+
+#move all files to corresponding folders
+for i in `ls *.dcd *.pdb`; do mv $i "${i:0:3}/";done

@@ -5,12 +5,12 @@ import numpy as np
 import pyvista as pv
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-from src.Model.EncDec import EDNet
+from src.Model.EncDec1 import EDNet
 from unit.Util.Shapes3D import get3D_rod
 
 ########---------- Simple test with 1 forward pass -----------########
 
-size = 64
+size = 32
 b, c, d, h, w = 1, 1, size, size, size
 dim = (b, c, d, h, w)
 data =  get3D_rod(dim).cuda()

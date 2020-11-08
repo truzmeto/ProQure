@@ -7,12 +7,12 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
 
-pdb_ids = ["AAA"]
-path = "../"
-#tp_name = "ACA"
-#path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
+pdb_ids = ["ARA1", "ARA2"]
+#path = "../"
+tp_name = "ARA"
+path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
 
-box_size = 20  
+box_size = 16  
 resolution = 1.0
 
 for i in range(len(pdb_ids)):
@@ -28,6 +28,8 @@ for i in range(len(pdb_ids)):
                            trans = False)
 
 print('Grid dim -- ', volume.shape)
+print(volume.max())
+
 
 Agroup_names = ["Sulfur/Selenium"  , "Nitrogen Amide",
                 "Nitrogen Aromatic", "Nitrogen Guanidinium",
