@@ -63,8 +63,8 @@ def run_model(volume, target, model1, model2, criterion, train = True):
     
     if train:
         loss.backward()
-        optimizer1.step()
-        optimizer2.step()
+        optimizer.step()
+        #optimizer2.step()
         
     return L1.item()
 
@@ -99,9 +99,13 @@ if __name__=='__main__':
     #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))
 
     
-    optimizer1 = optim.Adam(modelEncode.parameters(), lr = lrt)#, weight_decay = wd)
-    optimizer2 = optim.Adam(modelDecode.parameters(), lr = lrt)#, weight_decay = wd)
+    #optimizer1 = optim.Adam(modelEncode.parameters(), lr = lrt)#, weight_decay = wd)
+    #optimizer2 = optim.Adam(modelDecode.parameters(), lr = lrt)#, weight_decay = wd)
+
+    optimizer = optim.Adam([{'params': modelEncode.parameters()},
+                            {'params': modelDecode.parameters()} ], lr = lrt)#, weight_decay = wd)
     
+   
     iStart = start + 1
     iEnd = max_epoch + 1
     
