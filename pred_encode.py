@@ -32,9 +32,9 @@ def get_inp(pdb_ids, pdb_path, dim, rotate = True):
 if __name__=='__main__':
         
     dev_id = 0    
-    batch_size = 4
+    batch_size = 2
     dim = 16
-    start = 600
+    start = 601
     end = start + batch_size
     test_list = list(range(start, end))
     pdb_ids = ["AAA"]
@@ -52,14 +52,23 @@ if __name__=='__main__':
     volume = get_inp(test_list, pdb_path, dim, rotate = False)
     modelEncode.eval()
     latent = modelEncode(volume)
-
     torch.save(latent, out_path + "/" + tp_name + "/" + "latent" + str(start) + "-" + str(end) + ".pt")
     
     #plot latent vector distribution
-    batch_id=0
+    ##=====================================================================
+    plot_fn = 'visual/latend_dist.pdf'
+    fig = plt.figure(figsize=(5.,3.5))
+    batch_id = 0
     x = latent.squeeze()[batch_id].cpu().detach().numpy() 
     plt.hist(x, bins = 30)
+    plt.title(tp_name + str(start)+" latent feature")
+    plt.xlabel("Latent vector")
+    plt.ylabel("Frequency")
+
+    fig.set_tight_layout(True)
     plt.show()
-    
+    fig.savefig(plot_fn)
+    os.system("epscrop %s %s" % (plot_fn, plot_fn))
+
     
        

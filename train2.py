@@ -101,7 +101,6 @@ if __name__=='__main__':
     
     #optimizer1 = optim.Adam(modelEncode.parameters(), lr = lrt)#, weight_decay = wd)
     #optimizer2 = optim.Adam(modelDecode.parameters(), lr = lrt)#, weight_decay = wd)
-
     optimizer = optim.Adam([{'params': modelEncode.parameters()},
                             {'params': modelDecode.parameters()} ], lr = lrt)#, weight_decay = wd)
     

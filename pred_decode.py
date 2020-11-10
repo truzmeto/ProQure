@@ -34,9 +34,9 @@ if __name__=='__main__':
 
 
     dev_id = 0    
-    batch_size = 4
+    batch_size = 2
     dim = 16
-    start = 600
+    start = 601
     end = start + batch_size
     test_list = list(range(start, end))
     pdb_ids = ["AAA"]
@@ -67,10 +67,8 @@ if __name__=='__main__':
 
     #vol = volume.sum(dim=1)[batch_id].detach().cpu().numpy()
     #out = output.sum(dim=1)[batch_id].detach().cpu().numpy()
-
+    #
     #text = tp_name + str(batch_id + 1)
-    #print(out.min())
-    #print(out.max())
     #pl.subplot(0, 0);  
     #pl.add_text(text+" input", position = 'upper_left', font_size = fs)
     #pl.add_volume(vol, cmap = "viridis_r", opacity = "linear")
@@ -80,7 +78,7 @@ if __name__=='__main__':
     #pl.add_volume(abs(out), cmap = "viridis_r", opacity = "linear")
     #pl.add_axes()
     #pl.show()
-
+    
 
     Agroup_names = ["Sulfur/Selenium"  , "Nitrogen Amide",
                     "Nitrogen Aromatic", "Nitrogen Guanidinium",
@@ -88,11 +86,10 @@ if __name__=='__main__':
                     "Oxygen Hydroxyl"  , "Oxygen Carboxyl",
                     "Carbon sp2"       , "Carbon Aromatic",
                     "Carbon sp3"]
-
+    
     vol = volume.detach().cpu().numpy()
     out = output.detach().cpu().numpy()
-
-    
+        
     pl = pv.Plotter(point_smoothing = True, shape=(2, 6))
     fs = 12
     i_group = 0
@@ -103,17 +100,14 @@ if __name__=='__main__':
             
             if i_group < 11:
                 ch = out[0,i_group,:,:,:]#.cpu().numpy()
-                text = tp_name + ": " + Agroup_names[i_group]  
+                text = tp_name + str(start)+": " + Agroup_names[i_group]  
                 
                 pl.subplot(i, j)
                 pl.add_text(text, position = 'upper_left', font_size = fs)
                 pl.add_volume(ch, cmap = "viridis_r", opacity = "linear")
                 
             i_group = i_group + 1
-
+    
     pl.add_axes()
     pl.show()
-
-    
-    
-       
+   

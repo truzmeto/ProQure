@@ -7,9 +7,9 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
 
-pdb_ids = ["ARA1", "ARA2"]
+pdb_ids = ["AAA601"]#, "ARA2"]
 #path = "../"
-tp_name = "ARA"
+tp_name = "AAA"
 path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
 
 box_size = 16  
