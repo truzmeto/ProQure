@@ -6,9 +6,10 @@ import torch.optim as optim
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.Model.EncDec2 import Encode
+from src.Model.EncDec3 import Encode
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """
@@ -32,9 +33,9 @@ def get_inp(pdb_ids, pdb_path, dim, rotate = True):
 if __name__=='__main__':
         
     dev_id = 0    
-    batch_size = 2
+    batch_size = 5
     dim = 16
-    start = 601
+    start = 101
     end = start + batch_size
     test_list = list(range(start, end))
     pdb_ids = ["AAA"]
@@ -42,7 +43,7 @@ if __name__=='__main__':
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
     out_path = 'output/'
-    params_file_name = str(20000) + 'net_params'
+    params_file_name = str(10000) + 'net_params'
 
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
@@ -52,23 +53,37 @@ if __name__=='__main__':
     volume = get_inp(test_list, pdb_path, dim, rotate = False)
     modelEncode.eval()
     latent = modelEncode(volume)
-    torch.save(latent, out_path + "/" + tp_name + "/" + "latent" + str(start) + "-" + str(end) + ".pt")
+    torch.save(latent, out_path + "/" + tp_name + "/" + "latent" + str(start) + "-" + str(end-1) + ".pt")
+
+    
+    #plot latent volume feature
+    ##=====================================================================
+    fs = 12
+    print("Latent dim -- ",latent.shape)
+    p = pv.Plotter(point_smoothing = True)
+    out = latent.squeeze()[0].cpu().detach().numpy() 
+    text = pdb_ids[0] + str(start)   
+    p.add_text(text, position = 'upper_left', font_size = fs)
+    p.add_volume(out, cmap = "viridis_r", opacity = "linear")
+    p.add_axes()
+    p.show()
+
     
     #plot latent vector distribution
     ##=====================================================================
-    plot_fn = 'visual/latend_dist.pdf'
-    fig = plt.figure(figsize=(5.,3.5))
-    batch_id = 0
-    x = latent.squeeze()[batch_id].cpu().detach().numpy() 
-    plt.hist(x, bins = 30)
-    plt.title(tp_name + str(start)+" latent feature")
-    plt.xlabel("Latent vector")
-    plt.ylabel("Frequency")
+    #plot_fn = 'visual/latent_dist.pdf'
+    #fig = plt.figure(figsize=(5.,3.5))
+    #batch_id = 0
+    #x = latent.squeeze()[batch_id].cpu().detach().numpy() 
+    #plt.hist(x, bins = 30)
+    #plt.title(tp_name + str(start)+" latent feature")
+    #plt.xlabel("Latent vector")
+    #plt.ylabel("Frequency")
 
-    fig.set_tight_layout(True)
-    plt.show()
-    fig.savefig(plot_fn)
-    os.system("epscrop %s %s" % (plot_fn, plot_fn))
+    #fig.set_tight_layout(True)
+    #plt.show()
+    #fig.savefig(plot_fn)
+    #os.system("epscrop %s %s" % (plot_fn, plot_fn))
 
     
        

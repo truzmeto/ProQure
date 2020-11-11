@@ -7,7 +7,7 @@ import numpy as np
 import random
 
 from src.Util.volume import get_volume
-from src.Model.EncDec2 import Encode, Decode
+from src.Model.EncDec3 import Encode, Decode
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """
@@ -53,37 +53,30 @@ def run_model(volume, target, model1, model2, criterion, train = True):
     output = model2(latent)
         
     L1 = criterion(output, target)
-   
-    #L1_reg = 0.0
-    #for w in model.parameters():
-    #    L1_reg = L1_reg + w.norm(1)
-    #Lambda = 0.000001
-    #loss = L1 + Lambda * L1_reg
     loss = L1
     
     if train:
         loss.backward()
         optimizer.step()
-        #optimizer2.step()
         
     return L1.item()
 
 
 if __name__=='__main__':
-
         
     lrt = 0.0001
-    max_epoch = 20000
+    max_epoch = 10000
     start = 0
     dev_id = 1    
-    batch_size = 40
+    batch_size = 20
     
-    pdb_ids = ["AAA", "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA", "AMA", "ANA", "APA", "AQA", "ARA"]
-    tp_name = random.sample(pdb_ids, 1)[0] 
+    pdb_ids = ["AAA"]#, "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA", "AMA", "ANA", "APA", "AQA", "ARA"]
+    #tp_name = random.sample(pdb_ids, 1)[0] 
+    tp_name = pdb_ids[0] 
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
 
-    trainI = list(range(400))
-    validI = list(range(401,600))
+    trainI = list(range(100))
+    validI = list(range(101,200))
   
     out_path = 'output/'
     params_file_name = 'net_params'
@@ -98,9 +91,6 @@ if __name__=='__main__':
     #uncomment line below if need to load saved parameters
     #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))
 
-    
-    #optimizer1 = optim.Adam(modelEncode.parameters(), lr = lrt)#, weight_decay = wd)
-    #optimizer2 = optim.Adam(modelDecode.parameters(), lr = lrt)#, weight_decay = wd)
     optimizer = optim.Adam([{'params': modelEncode.parameters()},
                             {'params': modelDecode.parameters()} ], lr = lrt)#, weight_decay = wd)
     
