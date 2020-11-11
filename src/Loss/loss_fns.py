@@ -2,6 +2,24 @@ import torch
 import torch.nn as nn
 
 
+class WLoss(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, output, target, thresh = 0.07):
+
+        mask1 = target > thresh
+        l1 = (output[mask1] - target[mask1]).pow(2).mean().sqrt()
+
+        mask2 = target > thresh
+        l2 = (output[mask2] - target[mask2]).pow(2).mean().sqrt()
+
+        loss = 0.8*l1 + 0.2*l2
+        
+        return loss
+
+
+
 class logCoshLoss(torch.nn.Module):
 
     def __init__(self):

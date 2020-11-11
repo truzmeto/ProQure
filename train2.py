@@ -8,6 +8,7 @@ import random
 
 from src.Util.volume import get_volume
 from src.Model.EncDec3 import Encode, Decode
+from src.Loss.loss_fns import WLoss
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """
@@ -52,14 +53,13 @@ def run_model(volume, target, model1, model2, criterion, train = True):
     latent = model1(volume)
     output = model2(latent)
         
-    L1 = criterion(output, target)
-    loss = L1
-    
+    loss = criterion(output, target)
+
     if train:
         loss.backward()
         optimizer.step()
-        
-    return L1.item()
+
+    return loss.item()
 
 
 if __name__=='__main__':
@@ -85,8 +85,7 @@ if __name__=='__main__':
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
     modelDecode = Decode(out_dim = 11, size = 3, mult = 8).cuda()
-        
-    criterion = nn.L1Loss()
+    criterion = WLoss()#nn.L1Loss()
 
     #uncomment line below if need to load saved parameters
     #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))

@@ -63,7 +63,7 @@ if __name__=='__main__':
 
     pl = pv.Plotter(point_smoothing = True, shape=(1, 2))
     fs = 12
-    batch_id = 3
+    batch_id = 0
     vol = volume.sum(dim=1)[batch_id].detach().cpu().numpy()
     out = output.sum(dim=1)[batch_id].detach().cpu().numpy()
     text = tp_name + str(start + batch_id)
