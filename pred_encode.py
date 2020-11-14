@@ -35,7 +35,7 @@ if __name__=='__main__':
     dev_id = 0    
     batch_size = 5
     dim = 16
-    start = 101
+    start = 1001
     end = start + batch_size
     test_list = list(range(start, end))
     pdb_ids = ["AAA"]
@@ -43,7 +43,7 @@ if __name__=='__main__':
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
     out_path = 'output/'
-    params_file_name = str(10000) + 'net_params'
+    params_file_name = str(30000) + 'net_params'
 
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
@@ -59,10 +59,11 @@ if __name__=='__main__':
     #plot latent volume feature
     ##=====================================================================
     fs = 12
+    batch_id = 4
     print("Latent dim -- ",latent.shape)
     p = pv.Plotter(point_smoothing = True)
-    out = latent.squeeze()[0].cpu().detach().numpy() 
-    text = pdb_ids[0] + str(start)   
+    out = latent.squeeze()[batch_id].cpu().detach().numpy() 
+    text = tp_name + str(start)   
     p.add_text(text, position = 'upper_left', font_size = fs)
     p.add_volume(out, cmap = "viridis_r", opacity = "linear")
     p.add_axes()

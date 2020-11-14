@@ -36,7 +36,7 @@ if __name__=='__main__':
     dev_id = 0    
     batch_size = 5
     dim = 16
-    start = 101
+    start = 1001
     end = start + batch_size
     test_list = list(range(start, end))
     pdb_ids = ["AAA"]
@@ -44,7 +44,7 @@ if __name__=='__main__':
 
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
     out_path = 'output/'
-    params_file_name = str(10000) + 'net_params'
+    params_file_name = str(30000) + 'net_params'
 
     torch.cuda.set_device(dev_id)
     modelDecode = Decode(out_dim = 11, size = 3, mult = 8).cuda()
@@ -63,7 +63,7 @@ if __name__=='__main__':
 
     pl = pv.Plotter(point_smoothing = True, shape=(1, 2))
     fs = 12
-    batch_id = 0
+    batch_id = 4
     vol = volume.sum(dim=1)[batch_id].detach().cpu().numpy()
     out = output.sum(dim=1)[batch_id].detach().cpu().numpy()
     text = tp_name + str(start + batch_id)
@@ -72,7 +72,7 @@ if __name__=='__main__':
     pl.add_volume(vol, cmap = "viridis_r", opacity = "linear")
     pl.subplot(0, 1); 
     pl.add_text(text+" output", position = 'upper_left', font_size = fs)
-    pl.add_text(str(err), position = 'upper_right', font_size = fs)
+    pl.add_text("RMSE = "+str(err), position = 'upper_right', font_size = fs)
     pl.add_volume(abs(out), cmap = "viridis_r", opacity = "linear")
     pl.add_axes()
     pl.show()
