@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.Model.EncDec3 import Decode
+from src.SE3Model.EncDecSE3 import Decode
+
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """
@@ -21,20 +22,20 @@ def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     box_size = int(dim*resolution)
     batch_list = [pdb_path + str(ids) + ".pdb" for ids in pdb_ids]
     with torch.no_grad():
-        inp, _, ori = get_volume(path_list = batch_list, 
-                                 box_size = box_size,
-                                 resolution = resolution,
-                                 norm = norm,
-                                 rot = False,
-                                 trans = False)
-    return inp, ori 
+        inp, _, cent = get_volume(path_list = batch_list, 
+                                  box_size = box_size,
+                                  resolution = resolution,
+                                  norm = norm,
+                                  rot = False,
+                                  trans = False)
+    return inp, cent 
 
 
 if __name__=='__main__':
 
 
     dev_id = 0    
-    batch_size = 5
+    batch_size = 1
     dim = 24
     start = 401
     end = start + batch_size
@@ -44,10 +45,14 @@ if __name__=='__main__':
 
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
     out_path = 'output/'
-    params_file_name = str(30000) + 'net_params'
+    params_file_name = str(30000) + 'net_paramsSE'
+    inp_channels = 11
+    lmax = 0
+    k_size = 3
+    m = 8 #multiplier
 
     torch.cuda.set_device(dev_id)
-    modelDecode = Decode(out_dim = 11, size = 3, mult = 8).cuda()
+    modelDecode = Decode(size=k_size, mult=m, lmax=lmax, out_channels=inp_channels).cuda()
     checkpoint = torch.load(out_path + params_file_name)
     modelDecode.load_state_dict(checkpoint['modelDecode'])
   
@@ -56,6 +61,7 @@ if __name__=='__main__':
 
     modelDecode.eval()
     output = modelDecode(latent)
+    output = torch.einsum('txyzi->tixyz', output) #unpermute
     
     err = (output - volume).pow(2).mean().sqrt().item()
     err = round(err,3)
@@ -85,6 +91,7 @@ if __name__=='__main__':
     #                "Carbon sp3"]
     #
     ##vol = volume.detach().cpu().numpy()
+    #print(output.shape)
     #out = output.detach().cpu().numpy()
     #    
     #pl = pv.Plotter(point_smoothing = True, shape=(2, 6))
@@ -107,4 +114,4 @@ if __name__=='__main__':
     #
     #pl.add_axes()
     #pl.show()
-    
+   

@@ -24,7 +24,7 @@ class Convolution(torch.nn.Module):
         z = z[z.abs() <= 1]
         r = torch.stack(torch.meshgrid(x, y, z), dim=-1)  # [x, y, z, R^3]
 
-        R = partial(CosineBasisModel, max_radius=1.5, number_of_basis=(size + 1) // 2, h=50, L=3, act=swish)#TR
+        R = partial(CosineBasisModel, max_radius=1.0, number_of_basis=(size + 1) // 2, h=50, L=3, act=swish)#TR
         self.kernel = FrozenKernel(
             Rs_in,
             Rs_out,

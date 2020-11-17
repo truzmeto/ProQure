@@ -22,7 +22,7 @@ plt.ylabel('Loss', labelpad=2)
 plt.semilogy(t, lossT, ls='-', lw=1.2)
 #plt.plot(t, lossV, ls='-', lw=1.2)
 plt.semilogy(t, lossV, ls='--', lw=1.2)
-
+plt.xlim(0,500)
 plt.legend(["Train", "Validation"])
 
 fig.set_tight_layout(True)

@@ -15,7 +15,7 @@ def ConvBlock(Rs_in, Rs_out, lmax, size, fpix):
     return nn.Sequential(
         Convolution(Rs_in, Rs_out, lmax=lmax, size=size, stride=1, padding=size//2, fuzzy_pixels=fpix),
         #BatchNorm(Rs_out, normalization='component'),
-        NormActivation(Rs_out, sigmoid, normalization = 'component'),
+        NormActivation(Rs_out, swish, normalization = 'component'),
     )
 
 class Encode(nn.Module):
@@ -31,7 +31,8 @@ class Encode(nn.Module):
         self.down1 = ConvBlock(Rs_in    , Rs * m,    lmax=lmax, size=size, fpix=fp)
         self.down2 = ConvBlock(Rs * m   , Rs * (m//2), lmax=lmax, size=size, fpix=fp)
         self.down3 = ConvBlock(Rs * (m//2), Rs * (m//4), lmax=lmax, size=size, fpix=fp)
-        self.down4 = ConvBlock(Rs * (m//4), Rs * (m//8), lmax=lmax, size=size, fpix=fp)
+        #self.down4 = ConvBlock(Rs * (m//4), Rs * (m//8), lmax=lmax, size=size, fpix=fp)
+        self.down4 = ConvBlock(Rs * (m//4), [(1,0)], lmax=lmax, size=size, fpix=fp)
  
     def forward(self, x):
         # Down sampling
@@ -53,7 +54,8 @@ class Decode(nn.Module):
         fp = False  #option to add noise to conv kernels
 
         # Up sampling
-        self.up1 = ConvBlock(Rs * (m//8), Rs*(m//4), lmax=lmax, size=size, fpix=fp)
+        #self.up1 = ConvBlock(Rs * (m//8), Rs*(m//4), lmax=lmax, size=size, fpix=fp)
+        self.up1 = ConvBlock([(1,0)], Rs*(m//4), lmax=lmax, size=size, fpix=fp)
         self.up2 = ConvBlock(Rs * (m//4), Rs*(m//2), lmax=lmax, size=size, fpix=fp)
         self.up3 = ConvBlock(Rs * (m//2), Rs*m     , lmax=lmax, size=size, fpix=fp)
         self.up4 = ConvBlock(Rs *  m    , Rs_out   , lmax=lmax, size=size, fpix=fp)

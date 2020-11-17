@@ -7,8 +7,7 @@ import numpy as np
 import random
 
 from src.Util.volume import get_volume
-from src.Model.EncDec3 import Encode, Decode
-#from src.Loss.loss_fns import WLoss
+from src.SE3Model.EncDecSE3 import Encode, Decode
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """
@@ -37,7 +36,7 @@ def get_inp(pdb_ids, pdb_path, dim, rotate = True):
             irot = torch.randint(0, 24, (1,)).item()
             inp = Rot90Seq(inp, iRot = irot)
                     
-    return inp, ori
+    return inp, ori 
 
 
 def run_model(volume, target, model1, model2, criterion, train = True):
@@ -49,10 +48,12 @@ def run_model(volume, target, model1, model2, criterion, train = True):
         model1.eval()
         model2.eval()
 
-        
+    volume = torch.einsum('tixyz->txyzi', volume) #permute
     latent = model1(volume)
+
     output = model2(latent)
-        
+    output = torch.einsum('txyzi->tixyz', output) #unpermute
+
     loss = criterion(output, target)
 
     if train:
@@ -75,12 +76,19 @@ if __name__=='__main__':
     validI = list(range(401,600))
   
     out_path = 'output/'
-    params_file_name = 'net_params'
+    params_file_name = 'net_paramsSE'
     dim = 24
+
+    inp_channels = 11
+    out_channels = 11
+    lmax = 0
+    k_size = 3
+    m = 8 #multiplier
+
     
     torch.cuda.set_device(dev_id)
-    modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
-    modelDecode = Decode(out_dim = 11, size = 3, mult = 8).cuda()
+    modelEncode = Encode(size=k_size, mult=m, lmax=lmax, inp_channels=inp_channels).cuda()
+    modelDecode = Decode(size=k_size, mult=m, lmax=lmax, out_channels=out_channels).cuda()
     criterion = nn.L1Loss()
 
     #uncomment line below if need to load saved parameters
@@ -96,7 +104,6 @@ if __name__=='__main__':
     for epoch in range(iStart, iEnd):
 
         tp_name = random.sample(pdb_ids, 1)[0] 
-        #tp_name = pdb_ids[0] 
         pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
 
         
@@ -117,5 +124,4 @@ if __name__=='__main__':
             with open(out_path + 'log_train_val.txt', 'a') as fout:
                 fout.write('%d\t%f\t%f\n'%(epoch, lossT, lossV))
 
-    
        

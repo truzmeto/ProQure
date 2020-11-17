@@ -31,11 +31,11 @@ def get_volume(path_list, box_size, resolution,
     batch_size = len(path_list)
     coords, _, resnames, _, atomnames, num_atoms = pdb2coords(path_list)
 
-    #print(resnames, atomnames, num_atoms)
-    #print(coords.shape)
+   
     
     a,b = getBBox(coords, num_atoms)
     protein_center = (a+b)*0.5
+    #print(protein_center)
     coords = translate(coords, -protein_center, num_atoms)
     random_rotations = getRandomRotation(batch_size)
 
@@ -64,7 +64,7 @@ def get_volume(path_list, box_size, resolution,
         volume = (volume - torch.min(volume)) / (torch.max(volume) - torch.min(volume))
         
         
-    return volume, random_rotations
+    return volume, random_rotations, protein_center
 
 
 
