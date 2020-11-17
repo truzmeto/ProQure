@@ -7,8 +7,9 @@ import numpy as np
 import random
 
 from src.Util.volume import get_volume
+from src.Util.util import SampleBatchMix
 from src.Model.EncDec3 import Encode, Decode
-#from src.Loss.loss_fns import WLoss
+from src.Loss.loss_fns import XL2Loss
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """
@@ -20,8 +21,7 @@ def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     norm = False
     resolution = 1.000
     box_size = int(dim*resolution)
-
-    batch_list = [pdb_path + str(ids) + ".pdb" for ids in pdb_ids]
+    batch_list = [pdb_path + ids[:3] + "/" + ids + ".pdb" for ids in pdb_ids]
 
     with torch.no_grad():
 
@@ -68,20 +68,24 @@ if __name__=='__main__':
     max_epoch = 30000
     start = 0
     dev_id = 1    
-    batch_size = 40
+    n_tripeps = 4
+    n_samples = 10
+    dim = 24
+    batch_size = n_tripeps * n_samples
     
-    pdb_ids = ["AAA", "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA", "AMA", "ANA", "APA", "AQA", "ARA"]
-    trainI = list(range(400))
-    validI = list(range(401,600))
+    pdb_ids = ["AAA", "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA",
+               "AMA", "ANA", "APA", "AQA", "ARA", "ASA", "ATA", "AVA", "AWA", "AYA"]
+    trainI = list(range(1,201))
+    validI = list(range(201,401))
   
+    pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/"
     out_path = 'output/'
     params_file_name = 'net_params'
-    dim = 24
     
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
     modelDecode = Decode(out_dim = 11, size = 3, mult = 8).cuda()
-    criterion = nn.L1Loss()
+    criterion = XL2Loss()
 
     #uncomment line below if need to load saved parameters
     #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))
@@ -92,17 +96,15 @@ if __name__=='__main__':
    
     iStart = start + 1
     iEnd = max_epoch + 1
+
     
     for epoch in range(iStart, iEnd):
 
-        tp_name = random.sample(pdb_ids, 1)[0] 
-        #tp_name = pdb_ids[0] 
-        pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
+        train_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = trainI, shuffle = True)
+        valid_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = validI, shuffle = True)
 
+        print(train_list)
         
-        train_list = random.sample(trainI, batch_size)
-        valid_list = random.sample(validI, batch_size)
-
         volume, _ = get_inp(train_list, pdb_path, dim, rotate = False)
         lossT = run_model(volume, volume, modelEncode, modelDecode, criterion, train = True)    
 

@@ -1,6 +1,29 @@
 import torch
 import torch.nn as nn
 
+     
+
+class XL1Loss(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, output, target):
+
+        L1 = nn.L1Loss(reduction='none')
+        loss = L1(output,target) * target
+        return loss.sum()
+
+    
+class XL2Loss(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, output, target):
+
+        L2 = nn.MSELoss(reduction='none')
+        loss = L2(output,target) * target
+        return loss.sum()
+
 
 class WLoss(torch.nn.Module):
     def __init__(self):
@@ -107,7 +130,7 @@ class PenLoss(torch.nn.Module):
 
 class BinLoss(torch.nn.Module):
     """
-
+    Does not work!
     """
     def __init__(self):
         super(BinLoss,self).__init__()
