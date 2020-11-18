@@ -9,7 +9,7 @@ import random
 from src.Util.volume import get_volume
 from src.Util.util import SampleBatchMix
 from src.Model.EncDec3 import Encode, Decode
-from src.Loss.loss_fns import XL2Loss
+from src.Loss.loss_fns import XL2Loss, XL1Loss
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """

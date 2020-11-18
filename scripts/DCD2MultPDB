@@ -5,5 +5,8 @@ NFrames=$2 #1698
 for (( i=1; i<=$NFrames; i++ ))
 do  
     ~/bin/catdcd -o $NAME$i.pdb -otype pdb -first $i -last $i -stride 1 -s "${NAME}_"nowat.pdb "${NAME}_"nowat.dcd
+    #remove caps
+    grep -v "ACE\|NME" $NAME$i.pdb > tmp$i
+    mv tmp$i $NAME$i.pdb
 done
 
