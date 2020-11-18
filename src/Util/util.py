@@ -59,7 +59,7 @@ def SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids, shuffle = True):
         random.shuffle(pdb_ids)
     
     tp_list = random.sample(pdb_ids, n_tripeps)
-    sample_list = random.sample(sample_ids, n_tripeps)
+    sample_list = random.sample(sample_ids, n_samples)
 
     batch_list = []
     for i in tp_list:

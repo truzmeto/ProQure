@@ -8,7 +8,7 @@ import random
 
 from src.Util.volume import get_volume
 from src.Util.util import SampleBatchMix
-from src.Model.EncDec3 import Encode, Decode
+from src.Model.EncDec4 import Encode, Decode
 from src.Loss.loss_fns import XL2Loss, XL1Loss
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -75,9 +75,11 @@ if __name__=='__main__':
     
     pdb_ids = ["AAA", "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA",
                "AMA", "ANA", "APA", "AQA", "ARA", "ASA", "ATA", "AVA", "AWA", "AYA"]
+
     trainI = list(range(1,201))
     validI = list(range(201,401))
-  
+
+    
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/"
     out_path = 'output/'
     params_file_name = 'net_params'
@@ -96,14 +98,11 @@ if __name__=='__main__':
    
     iStart = start + 1
     iEnd = max_epoch + 1
-
     
     for epoch in range(iStart, iEnd):
 
         train_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = trainI, shuffle = True)
         valid_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = validI, shuffle = True)
-
-        print(train_list)
         
         volume, _ = get_inp(train_list, pdb_path, dim, rotate = False)
         lossT = run_model(volume, volume, modelEncode, modelDecode, criterion, train = True)    

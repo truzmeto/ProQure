@@ -9,7 +9,7 @@ import pandas as pd
 plot_fn= 'plot.pdf'
 fig = plt.figure(figsize=(5.,3.5))
 
-dat = pd.read_csv("../output/log_train_val.txt", sep="\t", header=None)
+dat = pd.read_csv("../output/log_train_valSE3.txt", sep="\t", header=None)
 dat.columns=["Epoch","LossT", "LossV"]
 t = dat["Epoch"].values
 lossT = dat["LossT"].values
@@ -22,7 +22,7 @@ plt.ylabel('Loss', labelpad=2)
 plt.semilogy(t, lossT, ls='-', lw=1.2)
 #plt.plot(t, lossV, ls='-', lw=1.2)
 plt.semilogy(t, lossV, ls='--', lw=1.2)
-plt.xlim(0,500)
+#plt.xlim(0,500)
 plt.legend(["Train", "Validation"])
 
 fig.set_tight_layout(True)

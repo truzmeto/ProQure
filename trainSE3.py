@@ -7,7 +7,10 @@ import numpy as np
 import random
 
 from src.Util.volume import get_volume
-from src.SE3Model.EncDecSE3 import Encode, Decode
+from src.SE3Model.EncDecSE3A import Encode, Decode
+from src.Util.util import SampleBatchMix
+from src.Loss.loss_fns import XL2Loss, XL1Loss
+
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """
@@ -19,9 +22,9 @@ def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     norm = False
     resolution = 1.000
     box_size = int(dim*resolution)
+    batch_list = [pdb_path + ids[:3] + "/" + ids + ".pdb" for ids in pdb_ids]
 
-    batch_list = [pdb_path + str(ids) + ".pdb" for ids in pdb_ids]
-
+    
     with torch.no_grad():
 
         inp, _, ori = get_volume(path_list = batch_list, 
@@ -68,16 +71,20 @@ if __name__=='__main__':
     lrt = 0.0001
     max_epoch = 30000
     start = 0
-    dev_id = 1    
-    batch_size = 40
+    dev_id = 0    
+    n_tripeps = 4
+    n_samples = 10
+    batch_size = n_tripeps * n_samples
+    dim = 24
+    pdb_ids = ["AAA", "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA",
+               "AMA", "ANA", "APA", "AQA", "ARA", "ASA", "ATA", "AVA", "AWA", "AYA"]
     
-    pdb_ids = ["AAA", "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA", "AMA", "ANA", "APA", "AQA", "ARA"]
-    trainI = list(range(400))
-    validI = list(range(401,600))
+    trainI = list(range(1,201))
+    validI = list(range(201,401))
   
     out_path = 'output/'
     params_file_name = 'net_paramsSE'
-    dim = 24
+    pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/"
 
     inp_channels = 11
     out_channels = 11
@@ -89,7 +96,7 @@ if __name__=='__main__':
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(size=k_size, mult=m, lmax=lmax, inp_channels=inp_channels).cuda()
     modelDecode = Decode(size=k_size, mult=m, lmax=lmax, out_channels=out_channels).cuda()
-    criterion = nn.L1Loss()
+    criterion = XL2Loss()# nn.L1Loss()
 
     #uncomment line below if need to load saved parameters
     #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))
@@ -103,13 +110,9 @@ if __name__=='__main__':
     
     for epoch in range(iStart, iEnd):
 
-        tp_name = random.sample(pdb_ids, 1)[0] 
-        pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
-
+        train_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = trainI, shuffle = True)
+        valid_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = validI, shuffle = True)
         
-        train_list = random.sample(trainI, batch_size)
-        valid_list = random.sample(validI, batch_size)
-
         volume, _ = get_inp(train_list, pdb_path, dim, rotate = False)
         lossT = run_model(volume, volume, modelEncode, modelDecode, criterion, train = True)    
 
@@ -121,7 +124,7 @@ if __name__=='__main__':
                        out_path + str(epoch) + params_file_name)
          
         if epoch % 10 == 0:
-            with open(out_path + 'log_train_val.txt', 'a') as fout:
+            with open(out_path + 'log_train_valSE3.txt', 'a') as fout:
                 fout.write('%d\t%f\t%f\n'%(epoch, lossT, lossV))
 
        
