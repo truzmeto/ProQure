@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.Model.EncDec3 import Decode
+from src.Model.EncDec4 import Decode
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """

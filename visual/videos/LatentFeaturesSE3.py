@@ -11,7 +11,7 @@ from scipy import ndimage
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
-from src.SE3Model.EncDecSE3 import Encode
+from src.SE3Model.EncDecSE3A import Encode
 
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -38,7 +38,7 @@ if __name__=='__main__':
     dev_id = 0    
     batch_size = 1
     dim = 24
-    pdb_ids = ["AYA"]
+    pdb_ids = ["AMA"]
     tp_name = pdb_ids[0]
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
@@ -55,7 +55,7 @@ if __name__=='__main__':
     modelEncode.load_state_dict(checkpoint['modelEncode'])
 
 
-    start = 1    
+    start = 101    
     end = start + 200
 
     fs = 12; cmap = "viridis_r" #'gist_ncar'
@@ -73,7 +73,7 @@ if __name__=='__main__':
         out = latent.squeeze().cpu().detach().numpy() 
         text = tp_name + str(i)   
         p.add_text(text, position = 'upper_left', font_size = fs)
-        p.add_volume(out, cmap = cmap, clim=[0.0, 12.0],opacity = "linear")
+        p.add_volume(np.abs(out), cmap = cmap, clim=[0.0, 12.0],opacity = "linear")
         p.add_axes()
 
         if i == start :

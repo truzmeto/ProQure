@@ -9,7 +9,7 @@ import random
 from src.Util.volume import get_volume
 from src.SE3Model.EncDecSE3A import Encode, Decode
 from src.Util.util import SampleBatchMix
-from src.Loss.loss_fns import XL2Loss, XL1Loss
+#from src.Loss.loss_fns import XL2Loss, XL1Loss
 
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -96,7 +96,7 @@ if __name__=='__main__':
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(size=k_size, mult=m, lmax=lmax, inp_channels=inp_channels).cuda()
     modelDecode = Decode(size=k_size, mult=m, lmax=lmax, out_channels=out_channels).cuda()
-    criterion = XL2Loss()# nn.L1Loss()
+    criterion =  nn.L1Loss() #XL2Loss()
 
     #uncomment line below if need to load saved parameters
     #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))

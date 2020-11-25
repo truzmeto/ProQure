@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.SE3Model.EncDecSE3 import Decode
+from src.SE3Model.EncDecSE3A import Decode
 
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -40,7 +40,7 @@ if __name__=='__main__':
     start = 401
     end = start + batch_size
     test_list = list(range(start, end))
-    pdb_ids = ["AYA"]
+    pdb_ids = ["AWA"]
     tp_name = pdb_ids[0]
 
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
@@ -57,7 +57,7 @@ if __name__=='__main__':
     modelDecode.load_state_dict(checkpoint['modelDecode'])
   
     volume, _ = get_inp(test_list, pdb_path, dim, rotate = False)
-    latent = torch.load(out_path + "/" + tp_name + "/" + "latent" + str(start) + "-" + str(end-1) + ".pt")
+    latent = torch.load(out_path + "/" + tp_name + "/" + "latentSE3" + str(start) + "-" + str(end-1) + ".pt")
 
     modelDecode.eval()
     output = modelDecode(latent)

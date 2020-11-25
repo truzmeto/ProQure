@@ -24,7 +24,36 @@ class XL2Loss(torch.nn.Module):
         loss = L2(output,target) * target
         return loss.sum()
 
+    
+class PWLoss(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, output, target):
 
+        T = torch.clamp(target, min = 0.1, max = target.max())
+        W = T / T.sum()
+        
+        L1 = nn.L1Loss(reduction='none')
+        loss = L1(output,target) * W
+
+        return loss.mean()
+
+class GFE_WLoss(torch.nn.Module):
+    def __init__(self): #??????????????????????????
+        super().__init__()
+    
+    def forward(self, output, target, min_val=-2.0, max_val=2.0):
+
+        T = torch.clamp(target, min = min_val, max = max_val)
+        W = -T / T.abs().sum()
+        
+        L1 = nn.L1Loss(reduction='none')
+        loss = L1(output,target) * W
+
+        return loss.mean()
+
+    
 class WLoss(torch.nn.Module):
     def __init__(self):
         super().__init__()

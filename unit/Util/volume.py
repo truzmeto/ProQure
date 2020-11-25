@@ -7,12 +7,11 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
 
-pdb_ids = ["AAA601"]#, "ARA2"]
-#path = "../"
-tp_name = "AAA"
+pdb_ids = ["AKA1"]#, "ARA2"]
+tp_name = pdb_ids[0][:3]
 path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
 
-box_size = 16  
+box_size = 24  
 resolution = 1.0
 
 for i in range(len(pdb_ids)):
@@ -20,12 +19,12 @@ for i in range(len(pdb_ids)):
     path_list = [path + pdb_ids[i] + ".pdb"]
     print(pdb_ids[i])
 
-    volume, _ = get_volume(path_list,
-                           box_size,
-                           resolution,
-                           norm = False,
-                           rot = False,
-                           trans = False)
+    volume, _, _ = get_volume(path_list,
+                              box_size,
+                              resolution,
+                              norm = False,
+                              rot = False,
+                              trans = False)
 
 print('Grid dim -- ', volume.shape)
 print(volume.max())

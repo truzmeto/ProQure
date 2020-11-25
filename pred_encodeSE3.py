@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.SE3Model.EncDecSE3 import Encode
+from src.SE3Model.EncDecSE3A import Encode
 from src.Util.util import write_map, grid2vec
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -39,7 +39,7 @@ if __name__=='__main__':
     start = 401
     end = start + batch_size
     test_list = list(range(start, end))
-    pdb_ids = ["AYA"]
+    pdb_ids = ["AWA"]
     tp_name = pdb_ids[0]
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
@@ -61,20 +61,20 @@ if __name__=='__main__':
     
     modelEncode.eval()
     latent = modelEncode(volume)
-    torch.save(latent, out_path + "/" + tp_name + "/" + "latent" + str(start) + "-" + str(end-1) + ".pt")
+    torch.save(latent, out_path + "/" + tp_name + "/" + "latentSE3" + str(start) + "-" + str(end-1) + ".pt")
 
     #save latent as cube file
     #=====================================================================
-    batch_id = 0
-    latent = latent.squeeze().cpu().detach().numpy()
-    print(latent.shape)
-    vec = grid2vec((dim,dim,dim), latent)
-    cube_path = out_path + "cube/" 
-    out_name = tp_name + str(start) + "SE3.gfe.map"
-    cent = cent.cpu().detach().numpy()
-    ori = cent[batch_id].round(3)
-    res = 1.000
-    write_map(vec,cube_path, out_name, ori, res, (dim,dim,dim))
+    #batch_id = 0
+    #latent = latent.squeeze().cpu().detach().numpy()
+    #print(latent.shape)
+    #vec = grid2vec((dim,dim,dim), latent)
+    #cube_path = out_path + "cube/" 
+    #out_name = tp_name + str(start) + "SE3.gfe.map"
+    #cent = cent.cpu().detach().numpy()
+    #ori = cent[batch_id].round(3)
+    #res = 1.000
+    #write_map(vec,cube_path, out_name, ori, res, (dim,dim,dim))
 
 
     
@@ -84,11 +84,12 @@ if __name__=='__main__':
     print("Latent dim -- ",latent.shape)
     p = pv.Plotter(point_smoothing = True)
     #out = latent.squeeze()[batch_id].cpu().detach().numpy()
-    out = latent#.squeeze().cpu().detach().numpy()
-    
+    out = latent.squeeze().cpu().detach().numpy()
+
+    print(out.min())
     text = tp_name + str(start)   
     p.add_text(text, position = 'upper_left', font_size = fs)
-    p.add_volume(out, cmap = "viridis_r", opacity = "linear")
+    p.add_volume(abs(out), cmap = "viridis_r", opacity = "linear")
     p.add_axes()
     p.show()
 

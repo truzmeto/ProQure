@@ -87,7 +87,7 @@ if __name__=='__main__':
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
     modelDecode = Decode(out_dim = 11, size = 3, mult = 8).cuda()
-    criterion = XL2Loss()
+    criterion = nn.L1Loss() #XL2Loss()
 
     #uncomment line below if need to load saved parameters
     #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))
@@ -103,7 +103,8 @@ if __name__=='__main__':
 
         train_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = trainI, shuffle = True)
         valid_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = validI, shuffle = True)
-        
+
+        print(len(train_list), train_list)
         volume, _ = get_inp(train_list, pdb_path, dim, rotate = False)
         lossT = run_model(volume, volume, modelEncode, modelDecode, criterion, train = True)    
 

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.Model.EncDec3 import Encode
+from src.Model.EncDec4 import Encode
 from src.Util.util import write_map, grid2vec
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -39,7 +39,7 @@ if __name__=='__main__':
     start = 401
     end = start + batch_size
     test_list = list(range(start, end))
-    pdb_ids = ["AYA"]
+    pdb_ids = ["AHA"]
     tp_name = pdb_ids[0]
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
@@ -55,6 +55,7 @@ if __name__=='__main__':
     cent = cent.cpu().detach().numpy()
     modelEncode.eval()
     latent = modelEncode(volume)
+    print(latent.shape)
     torch.save(latent, out_path + "/" + tp_name + "/" + "latent" + str(start) + "-" + str(end-1) + ".pt")
 
     #save latent as cube file

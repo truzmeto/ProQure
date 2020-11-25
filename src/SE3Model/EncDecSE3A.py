@@ -13,7 +13,7 @@ from src.SE3Model.convolution import Convolution
 
 def ConvBlock(Rs_in, Rs_out, lmax, size, fpix):
     return nn.Sequential(
-        Convolution(Rs_in, Rs_out, lmax=lmax, size=size, stride=1, padding=size//2, fuzzy_pixels=fpix),
+        Convolution(Rs_in, Rs_out, lmax=lmax, size=size, stride=1, padding=size//2, bias=None, fuzzy_pixels=fpix),
         #BatchNorm(Rs_out, normalization='component'),
         NormActivation(Rs_out, swish, normalization = 'component'),
     )
@@ -43,7 +43,6 @@ class Encode(nn.Module):
         down3 = self.down3(down2) 
         down4 = self.down4(down3) 
         return down4
-
     
 class Decode(nn.Module):
     def __init__(self, size, mult, lmax, out_channels=11):
@@ -97,3 +96,6 @@ if __name__ == "__main__":
   modelDecode = Decode(size=k_size, mult=m, lmax=lmax, out_channels=out_channels)
   out2 = modelDecode(out1)
   print("Decode out size: {}".format(out2.size()))
+
+
+  
