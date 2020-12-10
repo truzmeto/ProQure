@@ -10,7 +10,7 @@ class XL1Loss(torch.nn.Module):
     def forward(self, output, target):
 
         L1 = nn.L1Loss(reduction='none')
-        loss = L1(output,target) * target
+        loss = L1(output,target) * target #too unstable!
         return loss.sum()
 
     
@@ -21,7 +21,7 @@ class XL2Loss(torch.nn.Module):
     def forward(self, output, target):
 
         L2 = nn.MSELoss(reduction='none')
-        loss = L2(output,target) * target
+        loss = L2(output,target) * target #too unstable
         return loss.sum()
 
     
@@ -30,14 +30,18 @@ class PWLoss(torch.nn.Module):
         super().__init__()
     
     def forward(self, output, target):
-
-        T = torch.clamp(target, min = 0.1, max = target.max())
+        """
+        Note, reduction mean results in very small loss
+        """
+        
+        T = torch.clamp(target, min = 0.2, max = 1.0)# target.max())
         W = T / T.sum()
         
         L1 = nn.L1Loss(reduction='none')
         loss = L1(output,target) * W
 
-        return loss.mean()
+        return loss.sum()
+    
 
 class GFE_WLoss(torch.nn.Module):
     def __init__(self): #??????????????????????????

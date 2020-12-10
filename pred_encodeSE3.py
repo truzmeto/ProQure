@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.SE3Model.EncDecSE3A import Encode
+from src.SE3Model.EncDecSE3 import Encode
 from src.Util.util import write_map, grid2vec
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -35,18 +35,18 @@ if __name__=='__main__':
         
     dev_id = 0    
     batch_size = 1
-    dim = 24
-    start = 401
+    dim = 20
+    start = 1501
     end = start + batch_size
     test_list = list(range(start, end))
-    pdb_ids = ["AWA"]
+    pdb_ids = ["AYA"]
     tp_name = pdb_ids[0]
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
     out_path = 'output/'
-    params_file_name = str(30000) + 'net_paramsSE'
+    params_file_name = str(118000) + 'net_paramsSE'
     inp_channels = 11
-    lmax = 0
+    lmax = 1
     k_size = 3
     m = 8 #multiplier
 
@@ -81,15 +81,21 @@ if __name__=='__main__':
     #plot latent volume feature
     ##=====================================================================
     fs = 12
+    batch_id = 0
     print("Latent dim -- ",latent.shape)
     p = pv.Plotter(point_smoothing = True)
-    #out = latent.squeeze()[batch_id].cpu().detach().numpy()
-    out = latent.squeeze().cpu().detach().numpy()
+    #latent = torch.einsum('txyzi->tixyz', latent) #unpermute
+    out = latent.squeeze()[:,:,:,batch_id].cpu().detach().numpy()
+    #out = latent.squeeze() #.cpu().detach().numpy()
+    #vec = out[:,:,:,1].pow(2) +  out[:,:,:,2].pow(2) +  out[:,:,:,3].pow(2)
+    #vec_l = vec.sqrt().cpu().detach().numpy() #+ out[:,:,:,0].cpu().detach().numpy()
 
+    
     print(out.min())
     text = tp_name + str(start)   
     p.add_text(text, position = 'upper_left', font_size = fs)
-    p.add_volume(abs(out), cmap = "viridis_r", opacity = "linear")
+    p.add_volume(out, clim=[-0.1, .0], cmap = "viridis_r", opacity = "linear")
+    #p.add_volume(out, cmap = "viridis_r", opacity = "linear")
     p.add_axes()
     p.show()
 

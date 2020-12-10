@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.SE3Model.EncDecSE3A import Decode
+from src.SE3Model.EncDecSE3 import Decode
 
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -36,18 +36,18 @@ if __name__=='__main__':
 
     dev_id = 0    
     batch_size = 1
-    dim = 24
-    start = 401
+    dim = 20
+    start = 1501
     end = start + batch_size
     test_list = list(range(start, end))
-    pdb_ids = ["AWA"]
+    pdb_ids = ["AYA"]
     tp_name = pdb_ids[0]
 
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
     out_path = 'output/'
-    params_file_name = str(30000) + 'net_paramsSE'
+    params_file_name = str(49000) + 'net_paramsSE'
     inp_channels = 11
-    lmax = 0
+    lmax = 1
     k_size = 3
     m = 8 #multiplier
 
@@ -62,7 +62,8 @@ if __name__=='__main__':
     modelDecode.eval()
     output = modelDecode(latent)
     output = torch.einsum('txyzi->tixyz', output) #unpermute
-    
+
+    print("output min", output.min()) 
     err = (output - volume).pow(2).mean().sqrt().item()
     err = round(err,3)
     print("RMSE", err)
@@ -79,10 +80,10 @@ if __name__=='__main__':
     pl.subplot(0, 1); 
     pl.add_text(text+" output", position = 'upper_left', font_size = fs)
     pl.add_text("RMSE = "+str(err), position = 'upper_right', font_size = fs)
-    pl.add_volume(abs(out), cmap = "viridis_r", opacity = "linear")
+    pl.add_volume(out, cmap = "viridis_r", opacity = "linear")
     pl.add_axes()
     pl.show()
-    
+     
     #Agroup_names = ["Sulfur/Selenium"  , "Nitrogen Amide",
     #                "Nitrogen Aromatic", "Nitrogen Guanidinium",
     #                "Nitrogen Ammonium", "Oxygen Carbonyl",
@@ -108,7 +109,7 @@ if __name__=='__main__':
     #            
     #            pl.subplot(i, j)
     #            pl.add_text(text, position = 'upper_left', font_size = fs)
-    #            pl.add_volume(ch, cmap = "viridis_r", opacity = "linear")
+    #            pl.add_volume(abs(ch), cmap = "viridis_r", opacity = "linear")
     #            
     #        i_group = i_group + 1
     #

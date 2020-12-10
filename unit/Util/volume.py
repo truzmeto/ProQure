@@ -7,11 +7,14 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
 
-pdb_ids = ["AKA1"]#, "ARA2"]
-tp_name = pdb_ids[0][:3]
-path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
+#db_ids = ["AYA1"]#, "ARA2"]
+pdb_ids = ["1ycr"]
+#p_name = pdb_ids[0][:3]
+#path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
+path = "/u1/home/tr443/data/fragData/"
 
-box_size = 24  
+#box_size = 24  
+box_size = 40  
 resolution = 1.0
 
 for i in range(len(pdb_ids)):
@@ -39,17 +42,18 @@ Agroup_names = ["Sulfur/Selenium"  , "Nitrogen Amide",
 
 
 
-pl = pv.Plotter(point_smoothing = True, shape=(2, 6))
-fs = 11
+pl = pv.Plotter(point_smoothing = True, shape=(11, 1))
+fs = 9
 i_group = 0
 ipdb = 0
 
-for i in range(2):
-    for j in range(6):
+for i in range(11):
+    for j in range(1):
 
         if i_group < 11:
             ch = volume[0,i_group,:,:,:].cpu().numpy()
-            text = pdb_ids[ipdb] + ": " + Agroup_names[i_group]  
+            #ext = pdb_ids[ipdb] + ": " + Agroup_names[i_group]  
+            text = Agroup_names[i_group]  
             
             pl.subplot(i, j)
             pl.add_text(text, position = 'upper_left', font_size = fs)
@@ -57,6 +61,6 @@ for i in range(2):
 
         i_group = i_group + 1
 
-pl.add_axes()
+#pl.add_axes()
 pl.show()
 

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 from src.Util.volume import get_volume
-from src.Model.EncDec4 import Encode
+from src.Model.EncDec3 import Encode
 from src.Util.util import write_map, grid2vec
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -35,16 +35,16 @@ if __name__=='__main__':
         
     dev_id = 0    
     batch_size = 5
-    dim = 24
-    start = 401
+    dim = 20
+    start = 1501
     end = start + batch_size
     test_list = list(range(start, end))
-    pdb_ids = ["AHA"]
+    pdb_ids = ["AYA"]
     tp_name = pdb_ids[0]
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
     out_path = 'output/'
-    params_file_name = str(30000) + 'net_params'
+    params_file_name = str(50000) + 'net_params'
 
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
@@ -79,7 +79,7 @@ if __name__=='__main__':
     out = latent#.squeeze()[batch_id].cpu().detach().numpy() 
     text = tp_name + str(start)   
     p.add_text(text, position = 'upper_left', font_size = fs)
-    p.add_volume(out, cmap = "viridis_r", opacity = "linear")
+    p.add_volume(abs(out), cmap = "viridis_r", opacity = "linear")
     p.add_axes()
     p.show()
 

@@ -11,7 +11,7 @@ from scipy import ndimage
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
-from src.Model.EncDec4 import Encode
+from src.Model.EncDec3 import Encode
 
 def rotate_ligand(ligand, rotation_angle):    
     
@@ -49,13 +49,13 @@ if __name__=='__main__':
         
     dev_id = 0    
     batch_size = 1
-    dim = 24
+    dim = 20
     pdb_ids = ["AYA"]
     tp_name = pdb_ids[0]
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/" + tp_name
     out_path = '/u1/home/tr443/Projects/ProteinQure/ProQure/output/'
-    params_file_name = str(30000) + 'net_params'
+    params_file_name = str(50000) + 'net_params'
 
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
@@ -63,7 +63,7 @@ if __name__=='__main__':
     modelEncode.load_state_dict(checkpoint['modelEncode'])
 
 
-    start = 101    
+    start = 1001    
     end = start + 200
 
     fs = 12; cmap = "viridis_r" #'gist_ncar'
@@ -79,7 +79,7 @@ if __name__=='__main__':
         out = latent.squeeze().cpu().detach().numpy() 
         text = tp_name + str(i)   
         p.add_text(text, position = 'upper_left', font_size = fs)
-        p.add_volume(np.abs(out), cmap = cmap, clim=[0.0, 12.0],opacity = "linear")
+        p.add_volume(out, cmap = cmap, clim=[0.0, 12.0],opacity = "linear")
         p.add_axes()
 
         if i == start :

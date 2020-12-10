@@ -15,6 +15,7 @@ def ConvBlock(Rs_in, Rs_out, lmax, size, fpix):
     return nn.Sequential(
         Convolution(Rs_in, Rs_out, lmax=lmax, size=size, stride=1, padding=size//2, bias=None, fuzzy_pixels=fpix),
         #BatchNorm(Rs_out, normalization='component'),
+        #nn.ReLU(),
         NormActivation(Rs_out, swish, normalization = 'component'),
     )
 

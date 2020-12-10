@@ -8,8 +8,8 @@ import random
 
 from src.Util.volume import get_volume
 from src.Util.util import SampleBatchMix
-from src.Model.EncDec4 import Encode, Decode
-from src.Loss.loss_fns import XL2Loss, XL1Loss
+from src.Model.EncDec3 import Encode, Decode
+#from src.Loss.loss_fns import PWLoss
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
     """
@@ -65,19 +65,19 @@ def run_model(volume, target, model1, model2, criterion, train = True):
 if __name__=='__main__':
         
     lrt = 0.0001
-    max_epoch = 30000
-    start = 0
+    max_epoch = 100000
+    start = 50000
     dev_id = 1    
-    n_tripeps = 4
+    n_tripeps = 10
     n_samples = 10
-    dim = 24
+    dim = 20
     batch_size = n_tripeps * n_samples
     
     pdb_ids = ["AAA", "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA",
                "AMA", "ANA", "APA", "AQA", "ARA", "ASA", "ATA", "AVA", "AWA", "AYA"]
 
-    trainI = list(range(1,201))
-    validI = list(range(201,401))
+    trainI = list(range(1,1001))
+    validI = list(range(1001,1601))
 
     
     pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/"
@@ -87,11 +87,15 @@ if __name__=='__main__':
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(in_dim = 11, size = 3, mult = 8).cuda()
     modelDecode = Decode(out_dim = 11, size = 3, mult = 8).cuda()
-    criterion = nn.L1Loss() #XL2Loss()
-
+    #criterion = nn.L1Loss() #nn.BCELoss() #PWLoss()
+    criterion = nn.SmoothL1Loss()
+    
     #uncomment line below if need to load saved parameters
-    #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))
+    checkpoint = torch.load(out_path + str(start) + params_file_name)
+    modelEncode.load_state_dict(checkpoint['modelEncode'])
+    modelDecode.load_state_dict(checkpoint['modelDecode'])
 
+    
     optimizer = optim.Adam([{'params': modelEncode.parameters()},
                             {'params': modelDecode.parameters()} ], lr = lrt)#, weight_decay = wd)
     
@@ -104,7 +108,7 @@ if __name__=='__main__':
         train_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = trainI, shuffle = True)
         valid_list = SampleBatchMix(n_samples, n_tripeps, pdb_ids, sample_ids = validI, shuffle = True)
 
-        print(len(train_list), train_list)
+        #print(len(train_list), train_list)
         volume, _ = get_inp(train_list, pdb_path, dim, rotate = False)
         lossT = run_model(volume, volume, modelEncode, modelDecode, criterion, train = True)    
 

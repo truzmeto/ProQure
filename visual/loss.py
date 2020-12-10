@@ -9,7 +9,7 @@ import pandas as pd
 plot_fn= 'plot.pdf'
 fig = plt.figure(figsize=(5.,3.5))
 
-dat = pd.read_csv("../output/log_train_valSE3.txt", sep="\t", header=None)
+dat = pd.read_csv("../output/log_train_val.txt", sep="\t", header=None)
 dat.columns=["Epoch","LossT", "LossV"]
 t = dat["Epoch"].values
 lossT = dat["LossT"].values

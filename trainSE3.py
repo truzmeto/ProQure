@@ -7,9 +7,9 @@ import numpy as np
 import random
 
 from src.Util.volume import get_volume
-from src.SE3Model.EncDecSE3A import Encode, Decode
+from src.SE3Model.EncDecSE3 import Encode, Decode
 from src.Util.util import SampleBatchMix
-#from src.Loss.loss_fns import XL2Loss, XL1Loss
+#from src.Loss.loss_fns import PWLoss #XL2Loss, XL1Loss
 
 
 def get_inp(pdb_ids, pdb_path, dim, rotate = True):
@@ -65,22 +65,29 @@ def run_model(volume, target, model1, model2, criterion, train = True):
 
     return loss.item()
 
+def init_weights(m):
+    #if type(m) == E3Conv:
+    for p in m.parameters():
+        torch.nn.init.uniform_(p, -0.2, 0.2)
+        
 
 if __name__=='__main__':
         
-    lrt = 0.0001
-    max_epoch = 30000
+    #lrt = 0.0001
+    lrt = 0.001
+    
+    max_epoch = 500000
     start = 0
     dev_id = 0    
-    n_tripeps = 4
+    n_tripeps = 10
     n_samples = 10
     batch_size = n_tripeps * n_samples
-    dim = 24
+    dim = 20
     pdb_ids = ["AAA", "ACA", "ADA", "AEA", "AFA", "AGA", "AHA", "AIA", "AKA", "ALA",
                "AMA", "ANA", "APA", "AQA", "ARA", "ASA", "ATA", "AVA", "AWA", "AYA"]
     
-    trainI = list(range(1,201))
-    validI = list(range(201,401))
+    trainI = list(range(1,1001))
+    validI = list(range(1001,1601))
   
     out_path = 'output/'
     params_file_name = 'net_paramsSE'
@@ -88,7 +95,7 @@ if __name__=='__main__':
 
     inp_channels = 11
     out_channels = 11
-    lmax = 0
+    lmax = 1
     k_size = 3
     m = 8 #multiplier
 
@@ -96,11 +103,17 @@ if __name__=='__main__':
     torch.cuda.set_device(dev_id)
     modelEncode = Encode(size=k_size, mult=m, lmax=lmax, inp_channels=inp_channels).cuda()
     modelDecode = Decode(size=k_size, mult=m, lmax=lmax, out_channels=out_channels).cuda()
-    criterion =  nn.L1Loss() #XL2Loss()
+    modelEncode.apply(init_weights)
+    modelDecode.apply(init_weights)
 
-    #uncomment line below if need to load saved parameters
-    #model.load_state_dict(torch.load(out_path +str(start)+params_file_name))#+".pth"))
+    criterion =  nn.SmoothL1Loss() 
 
+    ##uncomment line below if need to load saved parameters
+    #checkpoint = torch.load(out_path + str(start) + params_file_name)
+    #modelEncode.load_state_dict(checkpoint['modelEncode'])
+    #modelDecode.load_state_dict(checkpoint['modelDecode'])
+
+    
     optimizer = optim.Adam([{'params': modelEncode.parameters()},
                             {'params': modelDecode.parameters()} ], lr = lrt)#, weight_decay = wd)
     
