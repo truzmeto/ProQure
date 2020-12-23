@@ -16,112 +16,146 @@ from e3nn.batchnorm import BatchNorm
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.SE3Model.convolution import Convolution
 
-   
-def ConvBlock(Rs_in, Rs_out, lmax, size, fpix, stride):
+
+def ConvBlock1(Rs_in, Rs_out, size, fpix):
     return nn.Sequential(
-        Convolution(Rs_in, Rs_out, lmax=lmax,  size=size, stride=stride, padding = size//2, bias=None,fuzzy_pixels = fpix),
+        Convolution(Rs_in, Rs_out, size = size, stride = 1, padding = size//2, fuzzy_pixels = fpix),
         NormActivation(Rs_out, swish, normalization = 'component'),
     )
 
-
-def ConvTransBlock(Rs_in, Rs_out, lmax, size, fpix):
+   
+def ConvBlock2(Rs_in, Rs_out, size, fpix, stride):
     return nn.Sequential(
-        Convolution(Rs_in, Rs_out, lmax=lmax, size=size, stride=2, padding=size//2, bias=None, output_padding=1, transpose=True, fuzzy_pixels = fpix),
-        NormActivation(Rs_out, swish, normalization = 'componenet'),
+        ConvBlock1(Rs_in, Rs_out, size, fpix),
+        Convolution(Rs_out, Rs_out, size=size, stride=stride, padding = size//2, fuzzy_pixels = fpix),
     )
 
 
-class Encode(nn.Module):
-    def __init__(self, size, lmax, inp_channels=11, n_aa=3):
-        super(Encode, self).__init__()
+def ConvTransBlock(Rs_in, Rs_out, size, fpix):
+    return nn.Sequential(
+        Convolution(Rs_in, Rs_out, size=size, stride=2, padding=size//2, output_padding=1, transpose=True, fuzzy_pixels = fpix),
+        #NormActivation(Rs_out, swish, normalization = 'componenet'),
+    )
+
+
+
+class VNet(nn.Module):
+    def __init__(self, size, n_reps, inp_channels=11):
+        super(VNet, self).__init__()
         
         Rs_in = [(inp_channels,0)]
-        Rs = list(range(lmax + 1)) #base Rs
+        Rs_out =  [(inp_channels,0)]
+        m = 10
+        n_vec, n_ten = n_reps
+        RsSca = [0]; RsVec = [1] * n_vec; RsTen = [2] * n_ten
+        Rs = RsSca * m
+        Rs1 = RsVec + RsTen
+        
         fp = False  #option to add noise to conv kernels
         st = 2      #downlampling stride
-
-        self.down_0 = ConvBlock(Rs_in,    10   * Rs, lmax=lmax, size=size, fpix=fp, stride=st)
-        self.down_1 = ConvBlock(10 *  Rs, 8    * Rs, lmax=lmax, size=size, fpix=fp, stride=st)
-        self.down_2 = ConvBlock(8 *   Rs, 6    * Rs, lmax=lmax, size=size, fpix=fp, stride=st)
-        self.down_3 = ConvBlock(6 *   Rs, 4    * Rs, lmax=lmax, size=size, fpix=fp, stride=st)
-        self.down_4 = ConvBlock(4 *   Rs, n_aa * Rs, lmax=lmax, size=size, fpix=fp, stride=st) 
         
+        #Down sampling
+        self.down_1 = ConvBlock2(Rs_in,              Rs + Rs1, size=size, fpix=fp, stride=st)
+        self.down_2 = ConvBlock2(     Rs + Rs1, 2  * Rs + Rs1, size=size, fpix=fp, stride=st)
+        self.down_3 = ConvBlock2( 2 * Rs + Rs1, 4  * Rs + Rs1, size=size, fpix=fp, stride=st)
+        self.down_4 = ConvBlock2( 4 * Rs + Rs1, 8  * Rs + Rs1, size=size, fpix=fp, stride=st) 
+        self.down_5 = ConvBlock2( 8 * Rs + Rs1, 16 * Rs + Rs1, size=size, fpix=fp, stride=st)
+        
+        # Bridge
+        self.bridge = ConvBlock2(16 * Rs + Rs1, 32 * Rs + Rs1, size=size, fpix=fp, stride=1)        
+                
+        # Up sampling
+        self.trans_1 = ConvTransBlock( 32 * Rs +   Rs1, 32 * Rs + Rs1, size=size, fpix=fp)
+        self.up_1    = ConvBlock2(     48 * Rs + 2*Rs1, 16 * Rs + Rs1, size=size, fpix=fp, stride=1)
+        self.trans_2 = ConvTransBlock( 16 * Rs +   Rs1, 16 * Rs + Rs1, size=size, fpix=fp )
+        self.up_2    = ConvBlock2(     24 * Rs + 2*Rs1, 8  * Rs + Rs1, size=size, fpix=fp, stride=1)
+        self.trans_3 = ConvTransBlock( 8  * Rs +   Rs1, 8  * Rs + Rs1, size=size, fpix=fp)
+        self.up_3    = ConvBlock2(     12 * Rs + 2*Rs1, 4  * Rs + Rs1, size=size, fpix=fp, stride=1)
+        self.trans_4 = ConvTransBlock( 4  * Rs +   Rs1, 4  * Rs + Rs1, size=size, fpix=fp)
+        self.up_4    = ConvBlock2(     6  * Rs + 2*Rs1, 2  * Rs + Rs1, size=size, fpix=fp, stride=1)
+        self.trans_5 = ConvTransBlock( 2  * Rs +   Rs1, 2  * Rs + Rs1, size=size, fpix=fp)
+        self.up_5    = ConvBlock2(     3  * Rs + 2*Rs1, 1  * Rs + Rs1, size=size, fpix=fp, stride=1)
+                                                                     
+        # Output
+        self.out = ConvBlock1(Rs + Rs1, Rs_out, size=size, fpix=fp)
 
+    
+    def skip(self, uped, bypass):
+        """
+        This functions matches size between bypass and upsampled feature.
+        It pads or unpads bypass depending on how different dims are.
+        """
+
+        uped = torch.einsum('txyzi->tixyz', uped)
+        bypass = torch.einsum('txyzi->tixyz', bypass)
+        p = bypass.shape[2] - uped.shape[2]                                                                                          
+    
+        if p == 0:
+            out = torch.cat((uped, bypass), 1)
+            out = torch.einsum('tixyz->txyzi', out)
+            return out
+        else:
+            pl = p // 2
+            pr = p - pl
+            bypass = F.pad(bypass, (-pl, -pr, -pl, -pr, -pl, -pr))
+            out = torch.cat((uped, bypass), 1)
+            out = torch.einsum('tixyz->txyzi', out)
+            
+            return out
+    
+        
     def forward(self, x):
         # Down sampling
-        down_0 = self.down_0(x)
-        down_1 = self.down_1(down_0)
+        down_1 = self.down_1(x) 
         down_2 = self.down_2(down_1) 
         down_3 = self.down_3(down_2) 
         down_4 = self.down_4(down_3) 
-        return down_4
-
-    
-
-class Decode(nn.Module):
-    def __init__(self, size, lmax, out_channels=11, n_aa=3):
-        super(Decode, self).__init__()
-        
-        Rs_out =  [(out_channels,0)]
-        Rs = list(range(lmax + 1)) #base Rs
-        fp = False  #option to add noise to conv kernels
+        down_5 = self.down_5(down_4) 
+        bridge = self.bridge(down_5) 
 
         # Up sampling
-        self.trans_0 = ConvTransBlock(n_aa * Rs, n_aa * Rs, lmax=lmax, size=size, fpix=fp)
-        self.up_0    = ConvBlock( n_aa * Rs, 4 * Rs, lmax=lmax, size=size, fpix=fp, stride=1)
-
-        self.trans_1 = ConvTransBlock(4 * Rs, 4 * Rs, lmax=lmax, size=size, fpix=fp )
-        self.up_1    = ConvBlock(    4 * Rs, 6 * Rs, lmax=lmax, size=size, fpix=fp, stride=1)
-
-        self.trans_2 = ConvTransBlock(6 * Rs, 6 * Rs, lmax=lmax, size=size, fpix=fp)
-        self.up_2    = ConvBlock(    6 * Rs, 8 * Rs, lmax=lmax, size=size, fpix=fp, stride=1)
-
-        self.trans_3 = ConvTransBlock(8 * Rs,  8 * Rs, lmax=lmax, size=size, fpix=fp)
-        self.up_3    = ConvBlock(    8 * Rs, 10 * Rs, lmax=lmax, size=size, fpix=fp, stride=1)
-
-        self.trans_4 = ConvTransBlock(10* Rs, 10 * Rs, lmax=lmax, size=size, fpix=fp)
-        self.up_4    = ConvBlock(    10* Rs, Rs_out, lmax=lmax, size=size, fpix=fp, stride=1)
-    
-        
-    def forward(self, x):
-        
-        # Up sampling
-        trans_0 = self.trans_0(x) 
-        up_0 = self.up_0(trans_0) 
+        trans_1 = self.trans_1(bridge) 
+        concat_1 = self.skip(trans_1, down_5)
+        up_1 = self.up_1(concat_1) 
                        
-        trans_1 = self.trans_1(up_0) 
-        up_1 = self.up_1(trans_1)
-       
         trans_2 = self.trans_2(up_1) 
-        up_2 = self.up_2(trans_2)  
+        concat_2 = self.skip(trans_2, down_4)
+        up_2 = self.up_2(concat_2)
         
         trans_3 = self.trans_3(up_2) 
-        up_3 = self.up_3(trans_3) 
-              
-        trans_4 = self.trans_4(up_3) 
-        up_4 = self.up_4(trans_4) 
+        concat_3 = self.skip(trans_3, down_3)
+        up_3 = self.up_3(concat_3)  
         
-           
-        return up_4
+        trans_4 = self.trans_4(up_3) 
+        concat_4 = self.skip(trans_4, down_2)
+        up_4 = self.up_4(concat_4) 
+        
+        trans_5 = self.trans_5(up_4) 
+        concat_5 = self.skip(trans_5, down_1)
+        up_5 = self.up_5(concat_5) 
+
+        # Output
+        out = self.out(up_5)
+        
+        return out
 
     
 if __name__ == "__main__":
-     
-    inp_size = 32
-    inp_channels = 11
-    out_channels = 11
+  device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    lmax = 1
-    k_size = 3
-   
-    x = torch.Tensor(1, inp_size, inp_size, inp_size, inp_channels).cuda()
-    print("x size: {}".format(x.size()))
+  inp_size = 32
+  inp_channels = 11
+  n_reps = [3,3] # n_vectors (L=1), n_tensors (L=2)
   
-    modelEncode = Encode(size=k_size, lmax=lmax, inp_channels=inp_channels).cuda()
-    out1 = modelEncode(x)
-    print("Encoded out size: {}".format(out1.size()))
-    
+  k_size = 3
   
-    modelDecode = Decode(size=k_size, lmax=lmax, out_channels=inp_channels).cuda()
-    out2 = modelDecode(out1)
-    print("Decode out size: {}".format(out2.size()))
+  x = torch.Tensor(1, inp_size, inp_size, inp_size, inp_channels)
+  x.to(device)
+  print("Input size: {}".format(x.size()))
+  
+  model = VNet(size = k_size, n_reps = n_reps)
+  
+  out = model(x)
+  #print("latent size: {}".format(latent.size()))
+  print("output size: {}".format(out.size()))
+  
