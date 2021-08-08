@@ -7,14 +7,12 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.Util.volume import get_volume
 
-#db_ids = ["AYA1"]#, "ARA2"]
-pdb_ids = ["1ycr"]
-#p_name = pdb_ids[0][:3]
-#path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
-path = "/u1/home/tr443/data/fragData/"
+pdb_ids = ["AYA1"]#, "ARA2"]
+tp_name = pdb_ids[0][:3]
+path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/" + tp_name + "/"
+#path = "/u1/home/tr443/data/fragData/"
 
-#box_size = 24  
-box_size = 40  
+box_size = 24  
 resolution = 1.0
 
 for i in range(len(pdb_ids)):

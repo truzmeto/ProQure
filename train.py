@@ -70,8 +70,8 @@ if __name__=='__main__':
     lrt = 0.0001
     wd = 0.00001
     
-    max_epoch = 100000
-    start = 40000
+    max_epoch = 10000
+    start = 0
     dev_id = 0    
     n_tripeps = 10
     n_samples = 10
@@ -85,7 +85,8 @@ if __name__=='__main__':
   
     out_path = 'output/'
     params_file_name = 'net_params'
-    pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/"
+    #pdb_path  = "/u1/home/tr443/Projects/ProteinQure/data/Trajectories/"
+    pdb_path = "/home/talant/Projects/ProteinQure/data/Trajectories/"
     k_size = 3
        
     torch.cuda.set_device(dev_id)
@@ -94,8 +95,8 @@ if __name__=='__main__':
     criterion =  nn.SmoothL1Loss() 
 
     ##uncomment line below if need to load saved parameters
-    checkpoint = torch.load(out_path + str(start) + params_file_name)
-    model.load_state_dict(checkpoint)
+    #checkpoint = torch.load(out_path + str(start) + params_file_name)
+    #model.load_state_dict(checkpoint)
 
     
     optimizer = optim.Adam(model.parameters(), lr = lrt, weight_decay = wd)

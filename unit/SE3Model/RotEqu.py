@@ -55,11 +55,11 @@ inp =  get3D_rod(dim).cuda()
 
 # Open a movie file
 p = pv.Plotter(point_smoothing = True, shape=(1, 3))
-p.open_movie('my_movie.mp4')
+p.open_movie('movieRotEqu.mp4')
 
 
 
-for i in range(180):
+for i in range(2):
 
     inpR = rotate_ligand(inp.cpu().detach().numpy(), rotation_angle= i*2.0)
     inpR = torch.from_numpy(inpR).float().to('cuda')

@@ -41,6 +41,10 @@ def ConvTransBlock(Rs_in, Rs_out, lmax, size, fpix):
     )
 
 
+def count_parameters(model):
+    n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return n_params
+
 
 class UNet(nn.Module):
     def __init__(self, size, mult, lmax, inp_channels=11, out_channels=6):
@@ -176,11 +180,11 @@ class UNet(nn.Module):
 if __name__ == "__main__":
   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-  inp_size = 64
+  inp_size = 32
   inp_channels = 1
   out_channels = 1
 
-  lmax = 1
+  lmax = 0
   k_size = 3
   m = 2 #multiplier
   
@@ -189,6 +193,9 @@ if __name__ == "__main__":
   print("x size: {}".format(x.size()))
   
   model = UNet(size = k_size, mult = m, lmax = lmax, inp_channels = inp_channels, out_channels = out_channels)
-  
+  n_params = count_parameters(model)
+
   out = model(x)
   print("out size: {}".format(out.size()))
+
+  print("N parameters = ", n_params)
