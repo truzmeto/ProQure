@@ -82,13 +82,13 @@ if __name__ == "__main__":
     import warnings
     warnings.filterwarnings("ignore")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    inp_size = 24
+    inp_size = 20
     inp_channels = 4
     out_channels = 26
     n_reps = [1,1]
     k_size = 5
     
-    x = torch.Tensor(1, inp_size, inp_size, inp_size, inp_channels)
+    x = torch.rand(1, inp_size, inp_size, inp_size, inp_channels)
     x.to(device)
     print("Input size: {}".format(x.size()))
     
@@ -99,3 +99,5 @@ if __name__ == "__main__":
     modelDecode = Decode(size=k_size, n_reps = n_reps, out_channels=out_channels)
     out2 = modelDecode(out1)
     print("Out size: {}".format(out2.size()))
+    print("Out max val: {}".format(out2.max()))
+    

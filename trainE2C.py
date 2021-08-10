@@ -41,9 +41,9 @@ if __name__=='__main__':
         
     dev_id = 0    
     lrt = 0.001
-    max_epoch = 200
+    max_epoch = 20
     start = 0
-    n_samples = 100
+    n_samples = 10
     batch_size = n_samples
     dim = 20
     resolution = 1.0
@@ -56,13 +56,12 @@ if __name__=='__main__':
     for el in AAOneLetter[0:19]: #skip Y for now
         for i in AAOneLetter:
             pdb_ids.append('A' + 'X' + el + '/' +'A' + i + el + '/' + 'A' + i + el)
-
+            
     out_path = 'output/'
     params_file_name = 'Elem2CharmmParams'
-    #pdb_path  = "/home/talant/Projects/ProteinQure/data/TrajectoriesAll/"
-    pdb_path ="/projects/ccib/lamoureux/tr443/ProQureData/Trajectories/"             
+    pdb_path  = "/home/talant/Projects/ProteinQure/data/TrajectoriesAll/"
+    #pdb_path ="/projects/ccib/lamoureux/tr443/ProQureData/Trajectories/"             
     
-
     trainI = list(range(1,400))
     validI = list(range(401,800))
     inp_channels = 4
@@ -82,7 +81,8 @@ if __name__=='__main__':
     #modelEncode.load_state_dict(checkpoint['modelEncode'])
     #modelDecode.load_state_dict(checkpoint['modelDecode'])
     
-    weights = get_group_weights(pdb_path, pdb_ids, i_type=n_typeC).cuda() #loss at the end  
+    weights = get_group_weights(pdb_path, pdb_ids, i_type=n_typeC).cuda() #loss at the end
+    print(weights)
     criterion = WeMSE(weights) # weigted L2  
     optimizer = optim.Adam([{'params': modelEncode.parameters()},
                             {'params': modelDecode.parameters()} ], lr = lrt)
@@ -103,7 +103,7 @@ if __name__=='__main__':
         valid_list = random.sample(validI, n_samples)
 
         lt = 0; lv = 0
-        for i in pdb_ids:
+        for i in pdb_ids[0:4]:
             #--get batch
             t_list = [pdb_path + i + str(ids) + ".pdb" for ids in train_list]
             v_list = [pdb_path + i + str(ids) + ".pdb" for ids in valid_list]
