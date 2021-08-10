@@ -1,7 +1,96 @@
 import torch
 import torch.nn as nn
 
-     
+class WeMSE(torch.nn.Module):
+    def __init__(self, weights):
+        super().__init__()
+        self.w = weights
+        
+    def forward(self, x, y):
+        loss = self.w * (y - x).pow(2).mean(dim=(2,3,4)).sum(0)         
+        return loss.sum()
+
+    
+
+class VAELoss(torch.nn.Module):
+    def __init__(self, fa=1.0, fb=0.1):
+        super().__init__()
+
+        self.a = fa
+        self.b = fb
+        self.log_scale = nn.Parameter(torch.Tensor([0.0])).cuda()
+        #self.mseL = nn.MSELoss()
+
+            
+    def ReconL(self, out, inp, scale):
+        dist = torch.distributions.Normal(out, scale) 
+        log_pxz = dist.log_prob(inp)
+                 
+        return log_pxz.mean(dim=(1, 2, 3, 4))
+
+
+    def latent_loss(self, mu, std):
+        mu_sq = mu * mu
+        std_sq = std * std
+        #return 0.5 * torch.mean(mu_sq + std_sq - torch.log(std_sq) - 1.0, dim=1)
+        return 0.5 * torch.mean(mu_sq + std_sq - 1.0, dim=1)
+
+
+    def KLdivL(self, z, mu, std):
+        # --------------------------
+        # Monte carlo KL divergence
+        # --------------------------
+        # 1. define the first two probabilities (in this case Normal for both)
+        
+        #z = z.squeeze(); mu = mu.squeeze(); std = std.squeeze()
+        
+        p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
+        q = torch.distributions.Normal(mu, std)
+
+        # 2. get the probabilities from the equation
+        log_qzx = q.log_prob(z)
+        log_pz = p.log_prob(z)
+        #kl-div
+        kl =  log_qzx - log_pz 
+        kl = kl.sum(1)
+        #print(kl.sum())
+        return kl*2/(32*32*32)     
+   
+    
+    def forward(self, out, inp, z, mu, std):
+        
+        scale = torch.exp(self.log_scale) 
+        recon_loss = self.ReconL(out, inp, scale)
+        #kl_loss = self.KLdivL(z, mu, std)
+        #loss = self.b*kl_loss - self.a*recon_loss #+ 50.0*self.mseL(out, inp)
+        #loss = self.b*self.latent_loss(mu, std) - self.a*recon_loss #+ 50.0*self.mseL(out, inp)
+        loss = - self.a*recon_loss #+ 50.0*self.mseL(out, inp)
+
+        return loss.sum() #batch sum
+
+
+
+
+
+
+class CLoss(torch.nn.Module):
+    def __init__(self, fa=1.0, fb=1.0):
+        super().__init__()
+
+        self.a = fa
+        self.b = fb
+        self.RegL = nn.MSELoss()
+        self.SegL = nn.BCELoss() #reduction="batchmean")
+   
+         
+    def forward(self, inp, outV, outU, OneHot):
+
+        #outU = outU.softmax(dim=1)
+        loss = self.a*self.RegL(outV, inp) + self.b*self.SegL(outU, OneHot)  
+        
+        return loss
+
+
 
 class XL1Loss(torch.nn.Module):
     def __init__(self):

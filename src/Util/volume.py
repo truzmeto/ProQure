@@ -7,64 +7,42 @@ from TorchProteinLibrary.FullAtomModel import getRandomRotation, getRandomTransl
 from TorchProteinLibrary.FullAtomModel import CoordsRotate, CoordsTranslate, getBBox
 
 
-def get_volume(path_list, box_size, resolution,
-               norm = False, rot = False, trans = False):
-    """
-    This function invokes modules from TorchPotentialLibrary and
-    reads .pdb inputs, projects atomic coordinates into
-    11 density maps in a 3D grid of given size(box_size) with
-    given resolution. It also rotates the structure if rot=True
-    11 ---> 11 atomic groups
-   
-    output: torch tensor(batch_size, 11, box_dim, box_dim, box_dim)
+class GetVolume:
+    def __init__(self, box_size, resolution, i_type, device='cuda'):
 
-    """
-    
-    pdb2coords = PDB2CoordsUnordered()
-    assignTypes = Coords2TypedCoords()
-    translate = CoordsTranslate()
-    rotate = CoordsRotate()
-    project = TypedCoords2Volume(box_size, resolution)
+        self.pdb2coords = PDB2CoordsUnordered()
+        self.assignTypes = Coords2TypedCoords(i_type)
+        self.translate = CoordsTranslate()
+        self.rotate = CoordsRotate()
+        #self.getBBox = getBBox()
+        self.project = TypedCoords2Volume(box_size, resolution)
+        self.box_size = box_size
+        self.resolution = resolution
+        self.device = device
+        self.rotate = CoordsRotate()
 
-
-    #with torch.no_grad():
-    batch_size = len(path_list)
-    coords, _, resnames, _, atomnames, num_atoms = pdb2coords(path_list)
-
-   
-    
-    a,b = getBBox(coords, num_atoms)
-    protein_center = (a+b)*0.5
-    #print(protein_center)
-    coords = translate(coords, -protein_center, num_atoms)
-    random_rotations = getRandomRotation(batch_size)
-
-    #rotate xyz 
-    if rot:
-        coords = rotate(coords, random_rotations, num_atoms)
         
-    box_center = torch.zeros(batch_size, 3, dtype=torch.double, device='cpu').fill_(resolution*box_size/2.0)
-    coords = translate(coords, box_center, num_atoms)
-    
-    
-    #translate xyz
-    if trans:                                                                                                      
-        random_translations = getRandomTranslation(a, b, resolution*box_size)
-        coords = translate(coords, random_translations, num_atoms)                             
-
-    #coords, num_atoms_of_type, offsets = assignTypes(coords.to(dtype=torch.float32), resnames, atomnames, num_atoms)
-    #volume = project(coords.cuda(), num_atoms_of_type.cuda(), offsets.cuda())
-
-    coords, num_atoms_of_type = assignTypes(coords.to(dtype=torch.float32), resnames, atomnames, num_atoms)
-    volume = project(coords.cuda(), num_atoms_of_type.cuda())
-
-    #print('num_atoms_of_type', num_atoms_of_type)
-    
-    if norm: #apply min-max norm 
-        volume = (volume - torch.min(volume)) / (torch.max(volume) - torch.min(volume))
+    def load_batch(self, path_list, rot=False):
         
+        batch_size = len(path_list)
+        coords, _, resnames, _, atomnames, num_atoms = self.pdb2coords(path_list)
+        a,b = getBBox(coords, num_atoms)
+        protein_center = (a+b)*0.5
+        coords = self.translate(coords, -protein_center, num_atoms)
+        random_rotations = getRandomRotation(batch_size)
+
+        #rotate xyz 
+        if rot:
+            coords = self.rotate(coords, random_rotations, num_atoms)
+
         
-    return volume, random_rotations, protein_center
+        box_center = torch.zeros(batch_size, 3, dtype=torch.double, device='cpu').fill_(self.resolution*self.box_size/2.0)
+        coords = self.translate(coords, box_center, num_atoms)
+
+        coords, num_atoms_of_type = self.assignTypes(coords.to(dtype=torch.float32), resnames, atomnames, num_atoms)
+        volume = self.project(coords.to(device=self.device), num_atoms_of_type.to(device=self.device))
+    
+        return volume, protein_center
 
 
 
@@ -84,4 +62,16 @@ def grid_rot(volume, batch_size, rot_matrix):
 
 
 if __name__=='__main__':
-    print("Skibidi Wa Pa Pa!!!")
+
+    #from volume import GetVolume
+    pdb_ids = ["1ycr"]
+    path = "/u1/home/tr443/data/fragData/"
+    box_size = 60  
+    resolution = 1.0
+    path_list = [path + pdb_ids[0]]
+    i_type=4
+    print(path_list)
+
+    GetV = GetVolume(box_size, resolution,i_type)
+    volume, _ = GetV.load_batch(path_list)
+    print(volume.shape)
